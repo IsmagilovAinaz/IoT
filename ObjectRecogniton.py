@@ -23,6 +23,20 @@ cvNet = cv2.dnn.readNetFromTensorflow(pb, pbtxt)
 
 while True:
     ret, img = capture.read()
+    rows = img.shape[0]
+    colums = img.shape[1]
+    cvNet.setInput(cv2.dnn.blobFromImage(img, size = (300, 300), swapRB = True, crop = False))
+    cvOut = cvNet.forward()
+    for det in cvOut[0, 0, :, :]:
+        score = float(det[2])
+        if score > 0.5:
+            idx = int(det[1])
+            left = det[3] * colums
+            top = det[4] * rows
+            right = det[5] * colums
+            bottom = det[6] * rows
+            cv2.rectangle(img, (int(left), int(top)), (int(right), int(bottom)), (0, 0, 0), thickness=1)
+            cv2.putText(img, classes[idx], (int(left), int(top)), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 0, 0), 2)
     cv2.imshow('FromCamera', img)
     k = cv2.waitKey(30) & 0xFF
     if k == 27:
