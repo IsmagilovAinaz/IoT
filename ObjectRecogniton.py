@@ -1,9 +1,5 @@
-
-from asyncio.windows_events import NULL
-from turtle import color
 import cv2
 import numpy as np
-import time
 from collections import Counter
 
 capture = cv2.VideoCapture(0)
@@ -27,7 +23,6 @@ pbtxt = 'ssd_inception_v2_coco_2017_11_17.pbtxt'
 cvNet = cv2.dnn.readNetFromTensorflow(pb, pbtxt)
 
 ret, frame = capture.read()
-start = time.time()
 rows = frame.shape[0]
 colums = frame.shape[1]
 cvNet.setInput(cv2.dnn.blobFromImage(frame, size = (300, 300), swapRB = True, crop = False))
@@ -51,6 +46,7 @@ f = open('listOfObjects.txt', 'w')
 for key, val in c_l.items():
     text = ':'.join((key, str(val)))
     f.write(text)
+    f.write('\n')
 f.close()
 cv2.imwrite('cam.png', frame)
 capture.release()
