@@ -1,5 +1,10 @@
+
+from asyncio.windows_events import NULL
+from turtle import color
 import cv2
 import numpy as np
+import time
+from collections import Counter
 
 capture = cv2.VideoCapture(0)
 
@@ -15,32 +20,37 @@ classes = ["background", "person", "bicycle", "car", "motorcycle",
   "unknown", "unknown", "toilet", "unknown", "tv", "laptop", "mouse", "remote", "keyboard",
   "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "unknown",
   "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush" ]
-  
+
 pb = 'frozen_inference_graph.pb'
 pbtxt = 'ssd_inception_v2_coco_2017_11_17.pbtxt'
 
 cvNet = cv2.dnn.readNetFromTensorflow(pb, pbtxt)
 
-while True:
-    ret, img = capture.read()
-    rows = img.shape[0]
-    colums = img.shape[1]
-    cvNet.setInput(cv2.dnn.blobFromImage(img, size = (300, 300), swapRB = True, crop = False))
-    cvOut = cvNet.forward()
-    for det in cvOut[0, 0, :, :]:
-        score = float(det[2])
-        if score > 0.5:
-            idx = int(det[1])
-            left = det[3] * colums
-            top = det[4] * rows
-            right = det[5] * colums
-            bottom = det[6] * rows
-            cv2.rectangle(img, (int(left), int(top)), (int(right), int(bottom)), (0, 0, 0), thickness=1)
-            cv2.putText(img, classes[idx], (int(left), int(top)), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 0, 0), 2)
-    cv2.imshow('FromCamera', img)
-    k = cv2.waitKey(30) & 0xFF
-    if k == 27:
-        break
-
+ret, frame = capture.read()
+start = time.time()
+rows = frame.shape[0]
+colums = frame.shape[1]
+cvNet.setInput(cv2.dnn.blobFromImage(frame, size = (300, 300), swapRB = True, crop = False))
+cvOut = cvNet.forward()
+l = []
+for det in cvOut[0, 0, :, :]:
+    score = float(det[2])
+    if score > 0.5:           
+        idx = int(det[1])
+        print(classes[idx])
+        predcvOut = cvOut
+        left = det[3] * colums
+        top = det[4] * rows
+        right = det[5] * colums
+        bottom = det[6] * rows
+        cv2.rectangle(frame, (int(left), int(top)), (int(right), int(bottom)), (0, 0, 0), thickness=1)
+        cv2.putText(frame, classes[idx], (int(left), int(top)), cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 0, 0), 2)
+        l.append(classes[idx])
+c_l = Counter(l)
+f = open('listOfObjects.txt', 'w')
+for key, val in c_l.items():
+    text = ':'.join((key, str(val)))
+    f.write(text)
+f.close()
+cv2.imwrite('cam.png', frame)
 capture.release()
-cv2.destroyAllWindows()
