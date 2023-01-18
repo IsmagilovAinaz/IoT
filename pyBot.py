@@ -10,8 +10,12 @@ dp = Dispatcher(bot)
 async def echo(message: types.CallbackQuery):
 	ret = subprocess.call("python3 raspoznavalka.py", shell=True)
 	if ret == 0:
+		answertext = ""
+		with open("listOfObjects.txt", "r") as listfile:
+			for line in listfile:
+				answertext = answertext + line
 		photo = open('test.png', 'rb')
-		await message.answer_photo(photo, caption="caption")
+		await message.answer_photo(photo, caption=answertext)
 	else: 
 		await message.answer("Ошибка модуля распознавания объектов")
 		
